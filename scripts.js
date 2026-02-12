@@ -119,3 +119,107 @@ colorItems.forEach(item => {
         }
     });
 });
+
+// ============================================
+// GALERIE LIGHTBOX
+// ============================================
+
+const galleryImages = Array.from(document.querySelectorAll('.gallery-grid .gallery-image'));
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightbox-image');
+const lightboxClose = document.getElementById('lightbox-close');
+const lightboxPrev = document.getElementById('lightbox-prev');
+const lightboxNext = document.getElementById('lightbox-next');
+const lightboxCounter = document.getElementById('lightbox-counter');
+let currentIndex = 0;
+
+if (lightbox && galleryImages.length) {
+    const updateLightbox = (index) => {
+        const img = galleryImages[index];
+        lightboxImg.src = img.src;
+        lightboxImg.alt = img.alt || '';
+        lightboxCounter.textContent = `${index + 1} / ${galleryImages.length}`;
+    };
+
+    const openLightbox = (index) => {
+        currentIndex = index;
+        updateLightbox(currentIndex);
+        lightbox.classList.add('open');
+        lightbox.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        if (lightboxClose) {
+            lightboxClose.focus();
+        }
+    };
+
+    const closeLightbox = () => {
+        lightbox.classList.remove('open');
+        lightbox.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    };
+
+    const showPrev = () => {
+        currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+        updateLightbox(currentIndex);
+    };
+
+    const showNext = () => {
+        currentIndex = (currentIndex + 1) % galleryImages.length;
+        updateLightbox(currentIndex);
+    };
+
+    const touch = {
+        startX: 0,
+        endX: 0,
+    };
+
+    const handleTouchStart = (e) => {
+        touch.startX = e.changedTouches[0].screenX;
+    };
+
+    const handleTouchEnd = (e) => {
+        touch.endX = e.changedTouches[0].screenX;
+        const delta = touch.endX - touch.startX;
+        if (Math.abs(delta) < 30) return;
+        if (delta > 0) {
+            showPrev();
+        } else {
+            showNext();
+        }
+    };
+
+    galleryImages.forEach((img, index) => {
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', () => openLightbox(index));
+    });
+
+    if (lightboxClose) {
+        lightboxClose.addEventListener('click', closeLightbox);
+    }
+
+    if (lightboxPrev) {
+        lightboxPrev.addEventListener('click', showPrev);
+    }
+
+    if (lightboxNext) {
+        lightboxNext.addEventListener('click', showNext);
+    }
+
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) {
+            closeLightbox();
+        }
+    });
+
+    lightboxImg.addEventListener('touchstart', handleTouchStart, { passive: true });
+    lightboxImg.addEventListener('touchend', handleTouchEnd, { passive: true });
+    lightbox.addEventListener('touchstart', handleTouchStart, { passive: true });
+    lightbox.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    document.addEventListener('keydown', (e) => {
+        if (!lightbox.classList.contains('open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') showPrev();
+        if (e.key === 'ArrowRight') showNext();
+    });
+}
